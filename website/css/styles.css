@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: white;
+    color: black;
+}
+h1, h2 {
+    border-bottom: 1px solid;
+}
+nav {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+nav a {
+    margin-right: 15px;
+    text-decoration: none;
+    color: black;
+}
+nav a:hover {
+    text-decoration: underline;
+}
+section {
+    margin-bottom: 40px;
+}
