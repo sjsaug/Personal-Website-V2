@@ -27,3 +27,14 @@ nav a:hover {
 section {
     margin-bottom: 40px;
 }
+
+#model-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+#model-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
