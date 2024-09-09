@@ -1,4 +1,5 @@
 let scene, camera, renderer, cube, controls;
+let raycaster, mouse;
 
 function init() {
     // create scene
@@ -20,6 +21,11 @@ function init() {
     controls.dampingFactor = 0.25;
     controls.screenSpacePanning = false;
     controls.maxPolarAngle = Math.PI / 2;
+
+    // add raycaster for mouse interaction
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+    renderer.domElement.addEventListener('click', onMouseClick, false);
 
     // load the model (must be .glb)
     const loader = new THREE.GLTFLoader();
@@ -65,6 +71,28 @@ function init() {
 
     // start animation
     animate();
+}
+
+function onMouseClick(event) {
+    // calculate mouse position in normalized device coordinates
+    // (-1 to +1) for both components
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    // update the picking ray with the camera and mouse position
+    raycaster.setFromCamera(mouse, camera);
+
+    // calculate objects intersecting the picking ray
+    const intersects = raycaster.intersectObject(cube, true);
+
+    if (intersects.length > 0) {
+        // the first intersection is the closest one
+        const intersection = intersects[0];
+        console.log('Clicked on the model!');
+        console.log('Face index:', intersection.faceIndex);
+        console.log('Point of intersection:', intersection.point);
+        
+    }
 }
 
 function animate() {
