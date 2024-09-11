@@ -1,44 +1,28 @@
-let scene, camera, renderer, controls;
-let raycaster, mouse;
-let projectsCube, libraryCube;
+let projectsScene, projectsCamera, projectsRenderer, projectsControls, projectsCube;
+let libraryScene, libraryCamera, libraryRenderer, libraryControls, libraryCube;
 
-function init() {
-    // create scene
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);  // white
+function initProjectsViewer() {
+    projectsScene = new THREE.Scene();
+    projectsScene.background = new THREE.Color(0xffffff);
 
-    // Create camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 15; // increased initial distance
+    projectsCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    projectsCamera.position.z = 10; // increased initial distance
 
-    // create renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('model-container').appendChild(renderer.domElement);
+    projectsRenderer = new THREE.WebGLRenderer({ antialias: true });
+    projectsRenderer.setSize(document.getElementById('projects-model-container').clientWidth, document.getElementById('projects-model-container').clientHeight);
+    document.getElementById('projects-model-container').appendChild(projectsRenderer.domElement);
 
-    // add OrbitControls
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
-    controls.screenSpacePanning = false;
-    controls.maxPolarAngle = Math.PI / 2;
+    projectsControls = new THREE.OrbitControls(projectsCamera, projectsRenderer.domElement);
+    projectsControls.enableDamping = true;
+    projectsControls.dampingFactor = 0.25;
 
-    // add raycaster for mouse interaction
-    raycaster = new THREE.Raycaster();
-    mouse = new THREE.Vector2();
-    renderer.domElement.addEventListener('click', onMouseClick, false);
-
-    // load the models
     const loader = new THREE.GLTFLoader();
-    
-    // Load projects cube
     loader.load(
         'models/projectscube.glb',
         function (gltf) {
             projectsCube = gltf.scene;
-            projectsCube.position.set(-2.5, 0, 0); // Position on the left, closer to center
-            scene.add(projectsCube);
-            checkAllModelsLoaded();
+            projectsScene.add(projectsCube);
+            fitCameraToObject(projectsCamera, projectsCube, projectsControls, 6); // increased zoom-out factor
         },
         function (xhr) {
             console.log('Projects cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
@@ -48,14 +32,37 @@ function init() {
         }
     );
 
-    // Load library cube
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    projectsScene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(1, 1, 1);
+    projectsScene.add(directionalLight);
+
+    projectsRenderer.domElement.addEventListener('click', onCubeClick, false);
+}
+
+function initLibraryViewer() {
+    libraryScene = new THREE.Scene();
+    libraryScene.background = new THREE.Color(0xffffff);
+
+    libraryCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    libraryCamera.position.z = 10; // increased initial distance
+
+    libraryRenderer = new THREE.WebGLRenderer({ antialias: true });
+    libraryRenderer.setSize(document.getElementById('library-model-container').clientWidth, document.getElementById('library-model-container').clientHeight);
+    document.getElementById('library-model-container').appendChild(libraryRenderer.domElement);
+
+    libraryControls = new THREE.OrbitControls(libraryCamera, libraryRenderer.domElement);
+    libraryControls.enableDamping = true;
+    libraryControls.dampingFactor = 0.25;
+
+    const loader = new THREE.GLTFLoader();
     loader.load(
         'models/librarycube.glb',
         function (gltf) {
             libraryCube = gltf.scene;
-            libraryCube.position.set(2.5, 0, 0); // Position on the right, closer to center
-            scene.add(libraryCube);
-            checkAllModelsLoaded();
+            libraryScene.add(libraryCube);
+            fitCameraToObject(libraryCamera, libraryCube, libraryControls, 6); // increased zoom-out factor
         },
         function (xhr) {
             console.log('Library cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
@@ -65,71 +72,87 @@ function init() {
         }
     );
 
-    // add lights
     const ambientLight = new THREE.AmbientLight(0x404040);
-    scene.add(ambientLight);
+    libraryScene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(1, 1, 1);
-    scene.add(directionalLight);
+    libraryScene.add(directionalLight);
 
-    // start animation
-    animate();
+    libraryRenderer.domElement.addEventListener('click', onCubeClick, false);
 }
 
-function checkAllModelsLoaded() {
-    if (projectsCube && libraryCube) {
-        // Both models are loaded, adjust camera
-        const box = new THREE.Box3().setFromObject(scene);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
+function fitCameraToObject(camera, object, controls, zoomOutFactor = 1.5) {
+    const boundingBox = new THREE.Box3().setFromObject(object);
+    const center = boundingBox.getCenter(new THREE.Vector3());
+    const size = boundingBox.getSize(new THREE.Vector3());
 
-        camera.position.z = cameraZ * 1.2; // Slightly reduced to account for closer cubes
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = camera.fov * (Math.PI / 180);
+    let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
 
-        controls.maxDistance = cameraZ * 10;
-        controls.target.copy(center);
-        controls.update();
-    }
+    camera.position.z = cameraZ * zoomOutFactor;
+    
+    const minZ = boundingBox.min.z;
+    const cameraToFarEdge = (minZ < 0) ? -minZ + cameraZ : cameraZ - minZ;
+
+    camera.far = cameraToFarEdge * 3;
+    camera.updateProjectionMatrix();
+
+    controls.target.copy(center);
+    controls.maxDistance = cameraToFarEdge * 2;
+    controls.update();
 }
 
-function onMouseClick(event) {
-    // calculate mouse position in normalized device coordinates
-    // (-1 to +1) for both components
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-    // update the picking ray with the camera and mouse position
-    raycaster.setFromCamera(mouse, camera);
-
-    // calculate objects intersecting the picking ray
-    const intersectsProjects = raycaster.intersectObject(projectsCube, true);
-    const intersectsLibrary = raycaster.intersectObject(libraryCube, true);
-
-    if (intersectsProjects.length > 0) {
-        console.log('Clicked on the projects cube!');
-        window.location.href = 'projects.html';
-    } else if (intersectsLibrary.length > 0) {
-        console.log('Clicked on the library cube!');
-        window.location.href = 'library.html';
+function onCubeClick(event) {
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const rect = event.target.getBoundingClientRect();
+    
+    mouse.x = ((event.clientX - rect.left) / event.target.clientWidth) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / event.target.clientHeight) * 2 + 1;
+    
+    if (event.target === projectsRenderer.domElement) {
+        raycaster.setFromCamera(mouse, projectsCamera);
+        const intersects = raycaster.intersectObject(projectsCube, true);
+        if (intersects.length > 0) {
+            window.location.href = 'projects.html';
+        }
+    } else if (event.target === libraryRenderer.domElement) {
+        raycaster.setFromCamera(mouse, libraryCamera);
+        const intersects = raycaster.intersectObject(libraryCube, true);
+        if (intersects.length > 0) {
+            window.location.href = 'library.html';
+        }
     }
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
+    
+    projectsControls.update();
+    projectsRenderer.render(projectsScene, projectsCamera);
+
+    libraryControls.update();
+    libraryRenderer.render(libraryScene, libraryCamera);
 }
 
-// handle window resizing
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const projectsContainer = document.getElementById('projects-model-container');
+    const libraryContainer = document.getElementById('library-model-container');
+
+    projectsCamera.aspect = projectsContainer.clientWidth / projectsContainer.clientHeight;
+    projectsCamera.updateProjectionMatrix();
+    projectsRenderer.setSize(projectsContainer.clientWidth, projectsContainer.clientHeight);
+
+    libraryCamera.aspect = libraryContainer.clientWidth / libraryContainer.clientHeight;
+    libraryCamera.updateProjectionMatrix();
+    libraryRenderer.setSize(libraryContainer.clientWidth, libraryContainer.clientHeight);
 }
 
 window.addEventListener('resize', onWindowResize, false);
 
-// init 3D viewer when the page loads
-window.onload = init;
+window.onload = function() {
+    initProjectsViewer();
+    initLibraryViewer();
+    animate();
+};
