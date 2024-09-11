@@ -1,5 +1,6 @@
-let scene, camera, renderer, cube, controls;
+let scene, camera, renderer, controls;
 let raycaster, mouse;
+let projectsCube, libraryCube;
 
 function init() {
     // create scene
@@ -8,7 +9,7 @@ function init() {
 
     // Create camera
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 10; // increased initial distance
+    camera.position.z = 15; // increased initial distance
 
     // create renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -27,35 +28,37 @@ function init() {
     mouse = new THREE.Vector2();
     renderer.domElement.addEventListener('click', onMouseClick, false);
 
-    // load the model (must be .glb)
+    // load the models
     const loader = new THREE.GLTFLoader();
+    
+    // Load projects cube
     loader.load(
-        'models/cube.glb',  // path to mdoel file
+        'models/projectscube.glb',
         function (gltf) {
-            cube = gltf.scene;
-            scene.add(cube);
-            
-            // center the model
-            const box = new THREE.Box3().setFromObject(cube);
-            const center = box.getCenter(new THREE.Vector3());
-            cube.position.sub(center);
-            
-            // adjust camera to fit the model
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const fov = camera.fov * (Math.PI / 180);
-            let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
-            
-            // set camera position further out
-            camera.position.z = cameraZ * 5.7; // increased multiplier for more zoom out
-            
-            // update the controls
-            controls.maxDistance = cameraZ * 10;
-            controls.target.copy(center);
-            controls.update();
+            projectsCube = gltf.scene;
+            projectsCube.position.set(-2.5, 0, 0); // Position on the left, closer to center
+            scene.add(projectsCube);
+            checkAllModelsLoaded();
         },
         function (xhr) {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            console.log('Projects cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        function (error) {
+            console.error('An error happened', error);
+        }
+    );
+
+    // Load library cube
+    loader.load(
+        'models/librarycube.glb',
+        function (gltf) {
+            libraryCube = gltf.scene;
+            libraryCube.position.set(2.5, 0, 0); // Position on the right, closer to center
+            scene.add(libraryCube);
+            checkAllModelsLoaded();
+        },
+        function (xhr) {
+            console.log('Library cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
         },
         function (error) {
             console.error('An error happened', error);
@@ -73,6 +76,24 @@ function init() {
     animate();
 }
 
+function checkAllModelsLoaded() {
+    if (projectsCube && libraryCube) {
+        // Both models are loaded, adjust camera
+        const box = new THREE.Box3().setFromObject(scene);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
+
+        camera.position.z = cameraZ * 1.2; // Slightly reduced to account for closer cubes
+
+        controls.maxDistance = cameraZ * 10;
+        controls.target.copy(center);
+        controls.update();
+    }
+}
+
 function onMouseClick(event) {
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
@@ -83,15 +104,15 @@ function onMouseClick(event) {
     raycaster.setFromCamera(mouse, camera);
 
     // calculate objects intersecting the picking ray
-    const intersects = raycaster.intersectObject(cube, true);
+    const intersectsProjects = raycaster.intersectObject(projectsCube, true);
+    const intersectsLibrary = raycaster.intersectObject(libraryCube, true);
 
-    if (intersects.length > 0) {
-        // the first intersection is the closest one
-        const intersection = intersects[0];
-        console.log('Clicked on the model!');
-        console.log('Face index:', intersection.faceIndex);
-        console.log('Point of intersection:', intersection.point);
-        
+    if (intersectsProjects.length > 0) {
+        console.log('Clicked on the projects cube!');
+        window.location.href = 'projects.html';
+    } else if (intersectsLibrary.length > 0) {
+        console.log('Clicked on the library cube!');
+        window.location.href = 'library.html';
     }
 }
 
