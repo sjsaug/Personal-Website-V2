@@ -6,7 +6,7 @@ function initProjectsViewer() {
     projectsScene.background = new THREE.Color(0xffffff);
 
     projectsCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    projectsCamera.position.z = 10; // increased initial distance
+    projectsCamera.position.z = 3;
 
     projectsRenderer = new THREE.WebGLRenderer({ antialias: true });
     projectsRenderer.setSize(document.getElementById('projects-model-container').clientWidth, document.getElementById('projects-model-container').clientHeight);
@@ -15,6 +15,11 @@ function initProjectsViewer() {
     projectsControls = new THREE.OrbitControls(projectsCamera, projectsRenderer.domElement);
     projectsControls.enableDamping = true;
     projectsControls.dampingFactor = 0.25;
+    // Disable zooming
+    projectsControls.enableZoom = false;
+    // Optional: Set rotation limits
+    projectsControls.minPolarAngle = Math.PI/4; // Limit vertical rotation if desired
+    projectsControls.maxPolarAngle = Math.PI/1.5;
 
     const loader = new THREE.GLTFLoader();
     loader.load(
@@ -22,7 +27,8 @@ function initProjectsViewer() {
         function (gltf) {
             projectsCube = gltf.scene;
             projectsScene.add(projectsCube);
-            fitCameraToObject(projectsCamera, projectsCube, projectsControls, 6); // increased zoom-out factor
+            // Remove zoom fitting since we're disabling zoom
+            setInitialCameraPosition(projectsCamera, projectsCube, projectsControls);
         },
         function (xhr) {
             console.log('Projects cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
@@ -46,7 +52,7 @@ function initLibraryViewer() {
     libraryScene.background = new THREE.Color(0xffffff);
 
     libraryCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    libraryCamera.position.z = 10; // increased initial distance
+    libraryCamera.position.z = 3;
 
     libraryRenderer = new THREE.WebGLRenderer({ antialias: true });
     libraryRenderer.setSize(document.getElementById('library-model-container').clientWidth, document.getElementById('library-model-container').clientHeight);
@@ -55,6 +61,11 @@ function initLibraryViewer() {
     libraryControls = new THREE.OrbitControls(libraryCamera, libraryRenderer.domElement);
     libraryControls.enableDamping = true;
     libraryControls.dampingFactor = 0.25;
+    // Disable zooming
+    libraryControls.enableZoom = false;
+    // Optional: Set rotation limits
+    libraryControls.minPolarAngle = Math.PI/4; // Limit vertical rotation if desired
+    libraryControls.maxPolarAngle = Math.PI/1.5;
 
     const loader = new THREE.GLTFLoader();
     loader.load(
@@ -62,7 +73,8 @@ function initLibraryViewer() {
         function (gltf) {
             libraryCube = gltf.scene;
             libraryScene.add(libraryCube);
-            fitCameraToObject(libraryCamera, libraryCube, libraryControls, 6); // increased zoom-out factor
+            // Remove zoom fitting since we're disabling zoom
+            setInitialCameraPosition(libraryCamera, libraryCube, libraryControls);
         },
         function (xhr) {
             console.log('Library cube ' + (xhr.loaded / xhr.total * 100) + '% loaded');
@@ -81,25 +93,16 @@ function initLibraryViewer() {
     libraryRenderer.domElement.addEventListener('click', onCubeClick, false);
 }
 
-function fitCameraToObject(camera, object, controls, zoomOutFactor = 1.5) {
+// New function to set initial camera position without zoom fitting
+function setInitialCameraPosition(camera, object, controls) {
     const boundingBox = new THREE.Box3().setFromObject(object);
     const center = boundingBox.getCenter(new THREE.Vector3());
-    const size = boundingBox.getSize(new THREE.Vector3());
-
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = camera.fov * (Math.PI / 180);
-    let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
-
-    camera.position.z = cameraZ * zoomOutFactor;
     
-    const minZ = boundingBox.min.z;
-    const cameraToFarEdge = (minZ < 0) ? -minZ + cameraZ : cameraZ - minZ;
-
-    camera.far = cameraToFarEdge * 3;
-    camera.updateProjectionMatrix();
-
+    // Set a fixed distance for the camera
+    camera.position.z = 3;
+    camera.lookAt(center);
+    
     controls.target.copy(center);
-    controls.maxDistance = cameraToFarEdge * 2;
     controls.update();
 }
 
@@ -128,6 +131,13 @@ function onCubeClick(event) {
 
 function animate() {
     requestAnimationFrame(animate);
+    
+    if (projectsCube) {
+        projectsCube.rotation.y += 0.001; // rot. speed
+    }
+    if (libraryCube) {
+        libraryCube.rotation.y += 0.001; // rot. speed
+    }
     
     projectsControls.update();
     projectsRenderer.render(projectsScene, projectsCamera);
