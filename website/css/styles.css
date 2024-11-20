@@ -5,6 +5,9 @@ body {
     padding: 20px;
     background-color: white;
     color: black;
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
 }
 h1, h2 {
     border-bottom: 1px solid;
