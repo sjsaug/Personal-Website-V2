@@ -85,7 +85,7 @@ section {
 }
 
 .project-details {
-    max-width: 950px;
+    max-width: 100%;
     margin: 0;
     padding: 20px;
 }
