@@ -39,14 +39,21 @@ section {
     height: 100% !important;
 }
 
+#projects-container {
+    width: 100%;
+    padding: 0 20px;  /* add padding to prevent content from touching the edges */
+    box-sizing: border-box;  /* include padding in the element's total width and height */
+}
+
 .projects-grid {
     display: grid;
     grid-template-columns: 1fr;  /* single column */
     gap: 20px;
     width: 100%;
-    max-width: 950px;
-    margin: 0;  /* 0 = align left */
+    max-width: 100%;  /* ensure it takes up the full width */
+    margin: 0;  /* remove auto margin */
     padding: 20px;
+    box-sizing: border-box;  /* include padding in the element's total width and height */
 }
 
 .project-card {
