@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="library.html">Library</a>
+    </nav>
+    <div id="library-container">
+        <h1>Library</h1>
+        <div id="library-table-container">
+            <div class="table-controls">
+                <input type="text" id="search-books" placeholder="Search books...">
+                <select id="status-filter">
+                    <option value="">Filter By</option>
+                    <option value="finished">Finished</option>
+                    <option value="currently-reading">Currently Reading</option>
+                    <option value="to-read">To Read</option>
+                </select>
+            </div>
+            <table id="library-table">
+                <thead>
+                    <tr>
+                        <th data-sort="title">Title ↕</th>
+                        <th data-sort="author">Author ↕</th>
+                        <th data-sort="rating">Rating ↕</th>
+                        <th data-sort="genre">Genre ↕</th>
+                        <th data-sort="status">Status ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="library-table-body">
+                    <!-- Books will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="book-details" class="book-details" style="display: none;">
+            <!-- book details dynamically inserted here -->
+        </div>
+    </div>
+    <script src="js/library.js"></script>
+</body>
+</html>
