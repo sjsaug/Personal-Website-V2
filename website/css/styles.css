@@ -41,7 +41,6 @@ section {
 
 #projects-container {
     width: 100%;
-    padding: 0 20px;  /* add padding to prevent content from touching the edges */
     box-sizing: border-box;  /* include padding in the element's total width and height */
 }
 
@@ -52,7 +51,7 @@ section {
     width: 100%;
     max-width: 100%;  /* ensure it takes up the full width */
     margin: 0;  /* remove auto margin */
-    padding: 20px;
+    padding: 0;
     box-sizing: border-box;  /* include padding in the element's total width and height */
 }
 
@@ -65,6 +64,7 @@ section {
     background-color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     width: 100%;  /* force full width */
+    box-sizing: border-box;
 }
 
 .project-card:hover {
@@ -141,65 +141,6 @@ section {
 
 .github-link:hover {
     background-color: #e0e0e0;
-}
-
-.books-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.book-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    width: 100%;
-}
-
-.book-card:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transform: translateY(-5px);
-    border-color: #d0d0d0;
-}
-
-.book-card h3 {
-    margin-top: 0;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.book-card p {
-    margin: 0;
-    color: #666;
-}
-
-.book-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.book-meta .status {
-    font-weight: bold;
-}
-
-.book-meta .status.finished {
-    color: #4CAF50;
-}
-
-.book-meta .status.currently-reading {
-    color: #2196F3;
 }
 
 .book-details {
